@@ -1,0 +1,2 @@
+.alter database SolarSystem policy streamingingestion enable;
+.alter table SystemStatus policy streamingingestion enable;

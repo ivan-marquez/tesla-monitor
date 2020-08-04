@@ -22,3 +22,6 @@
 
 # IDE settings
 .vscode/
+
+# Mac/OSX
+**/.DS_Store

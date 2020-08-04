@@ -1,0 +1,28 @@
+.create-or-alter function 
+with (docstring = 'Retrieve energy usage by source')
+GetEnergyUsage()  {
+    SystemStatus
+    | where
+        battery_last_communication_time between (startofday(now())..endofday(now()))
+    | project
+        home=load_instant_power,
+        solar=solar_instant_power,
+        from_pw=abs((1 + battery_instant_power / abs(battery_instant_power)) * battery_instant_power / 2),
+        to_pw=abs((1 - battery_instant_power / abs(battery_instant_power)) * battery_instant_power / 2),
+        from_grid=abs((1 + site_instant_power / abs(site_instant_power)) * site_instant_power / 2),
+        to_grid=abs((1 - site_instant_power / abs(site_instant_power)) * site_instant_power / 2),
+        _time=battery_last_communication_time - 4h
+    | make-series
+        home=round(avg(home) / 1000, 2),
+        solar=round(avg(solar) / 1000, 2),
+        from_pw=round((avg(from_pw) - avg(to_pw)) / 1000, 2),
+        from_grid=round((avg(from_grid) - avg(to_grid)) / 1000, 2)
+        on _time
+        from startofday(now()) to endofday(now()) step 5m
+    | mv-expand 
+        _time to typeof(datetime), 
+        home to typeof(real), 
+        solar to typeof(real),
+        from_pw to typeof(real),
+        from_grid to typeof(real)
+}

@@ -1,0 +1,15 @@
+.create-or-alter function 
+with (docstring = 'Retrieve actual usage by source')
+GetCurrentState()  {
+    SystemStatus
+    | summarize
+        home=arg_max(load_last_communication_time, load_instant_power),
+        solar=arg_max(solar_last_communication_time, solar_instant_power),
+        battery=arg_max(battery_last_communication_time, battery_instant_power),
+        grid=arg_max(site_last_communication_time, site_instant_power)
+    | project
+        home=round(load_instant_power / 1000, 2),
+        solar=round(solar_instant_power / 1000, 2),
+        battery=round(battery_instant_power / 1000, 2),
+        grid=round(site_instant_power / 1000, 2)
+}

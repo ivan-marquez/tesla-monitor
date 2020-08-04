@@ -1,0 +1,9 @@
+.create-or-alter function 
+with (docstring = 'Retrieve actual battery percentage')
+GetBatteryPercentage()  {
+    SystemStatus
+    | summarize
+        battery=arg_max(battery_last_communication_time, battery_percentage)
+    | project
+        battery=round(battery_percentage)
+}

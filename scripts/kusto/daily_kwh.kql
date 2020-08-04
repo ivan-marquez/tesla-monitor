@@ -1,0 +1,31 @@
+.create-or-alter function 
+with (docstring = 'Retrieve actual kwh by energy source')
+GetCurrentKwh()  {
+  SystemStatus
+  | where 
+      battery_last_communication_time - 4h between (startofday(now() - 4h)..endofday(now() - 4h))
+  | project
+      home=load_instant_power,
+      solar=solar_instant_power,
+      from_pw=abs((1 + battery_instant_power / abs(battery_instant_power)) * battery_instant_power / 2),
+      to_pw=abs((1 - battery_instant_power / abs(battery_instant_power)) * battery_instant_power / 2),
+      from_grid=abs((1 + site_instant_power / abs(site_instant_power)) * site_instant_power / 2),
+      to_grid=abs((1 - site_instant_power / abs(site_instant_power)) * site_instant_power / 2),
+      _time=battery_last_communication_time
+  | summarize
+      kwh_home=round(avg(home) / 1000, 2),
+      kwh_solar=round(avg(solar) / 1000, 2),
+      kwh_from_pw=round(avg(from_pw) / 1000, 2),
+      kwh_to_pw=round(avg(to_pw) / 1000, 2),
+      kwh_from_grid=round(avg(from_grid) / 1000, 2),
+      kwh_to_grid=round(avg(to_grid) / 1000, 2)
+    by 
+    _time=bin(_time, 1h)
+  | summarize
+      kwh_home=round(sum(kwh_home), 1),
+      kwh_solar=round(sum(kwh_solar), 1),
+      kwh_from_pw=round(sum(kwh_from_pw), 1),
+      kwh_to_pw=round(sum(kwh_to_pw), 1),
+      kwh_from_grid=round(sum(kwh_from_grid), 1),
+      kwh_to_grid=round(sum(kwh_to_grid), 1)
+}

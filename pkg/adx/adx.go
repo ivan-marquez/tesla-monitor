@@ -17,34 +17,21 @@ type ADX struct {
 	clientID     string
 	tenantID     string
 	clientSecret string
-}
-
-// GetKustoClient sets up and returns a Kusto client
-func (adx *ADX) GetKustoClient() (*kusto.Client, error) {
-	authorizer := kusto.Authorization{
-		Config: auth.NewClientCredentialsConfig(adx.clientID, adx.clientSecret, adx.tenantID),
-	}
-
-	client, err := kusto.New(adx.url, authorizer)
-	if err != nil {
-		return nil, fmt.Errorf("Error authorizing with Azure: %v", err)
-	}
-
-	return client, nil
+	kustoClient  *kusto.Client
 }
 
 // IngestData inserts passed payload to Kusto cluster
-func (adx *ADX) IngestData(c *kusto.Client, payload []byte) error {
+func (adx *ADX) IngestData(payload []byte) error {
 	const db = "SolarSystem"
 	const table = "SystemStatus"
 	const ingestionMapping = "SystemStatusMapping"
 
-	in, err := ingest.New(c, db, table)
+	in, err := ingest.New(adx.kustoClient, db, table)
 	if err != nil {
 		return fmt.Errorf("Error setting up ingestion: %v", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := in.Stream(ctx, payload, ingest.JSON, ingestionMapping); err != nil {
@@ -55,11 +42,21 @@ func (adx *ADX) IngestData(c *kusto.Client, payload []byte) error {
 }
 
 // New function package constructor
-func New(url, clientID, tenantID, clientSecret string) *ADX {
+func New(url, clientID, tenantID, clientSecret string) (*ADX, error) {
+	authorizer := kusto.Authorization{
+		Config: auth.NewClientCredentialsConfig(clientID, clientSecret, tenantID),
+	}
+
+	kc, err := kusto.New(url, authorizer)
+	if err != nil {
+		return nil, fmt.Errorf("Error authorizing with Azure: %v", err)
+	}
+
 	return &ADX{
 		url,
 		clientID,
 		tenantID,
 		clientSecret,
-	}
+		kc,
+	}, nil
 }

@@ -2,9 +2,11 @@
 package iot
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // Tessel type represents IoT device
@@ -21,8 +23,13 @@ type Powerwall struct {
 // GetAggregates retrieves aggregates for solar, site and battery status
 func (t *Tessel) GetAggregates(p *Powerwall) (*Powerwall, error) {
 	endpoint := fmt.Sprintf("%s/aggregates", t.url)
+	req, _ := http.NewRequest("GET", endpoint, nil)
+	timeoutCtx, cancelFunc := context.WithTimeout(req.Context(), 5*time.Millisecond)
 
-	res, err := http.Get(endpoint)
+	defer cancelFunc()
+
+	req = req.WithContext(timeoutCtx)
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return p, fmt.Errorf("Error getting aggregates: %v", err)
 	}
@@ -30,7 +37,7 @@ func (t *Tessel) GetAggregates(p *Powerwall) (*Powerwall, error) {
 	defer res.Body.Close()
 
 	if err = json.NewDecoder(res.Body).Decode(&p.Aggregates); err != nil {
-		return p, fmt.Errorf("Error decoding aggregates Json: %v", err)
+		return p, err
 	}
 
 	return p, nil
@@ -39,10 +46,15 @@ func (t *Tessel) GetAggregates(p *Powerwall) (*Powerwall, error) {
 // GetBatteryPercentage retrieves the battery percentage
 func (t *Tessel) GetBatteryPercentage(p *Powerwall) (*Powerwall, error) {
 	endpoint := fmt.Sprintf("%s/status", t.url)
+	req, _ := http.NewRequest("GET", endpoint, nil)
+	timeoutCtx, cancelFunc := context.WithTimeout(req.Context(), 5*time.Millisecond)
 
+	defer cancelFunc()
+
+	req = req.WithContext(timeoutCtx)
 	res, err := http.Get(endpoint)
 	if err != nil {
-		return p, fmt.Errorf("Error getting battery percentage: %v", err)
+		return p, err
 	}
 
 	defer res.Body.Close()

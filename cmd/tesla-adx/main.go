@@ -40,17 +40,10 @@ func main() {
 	)
 
 	tessel := iot.New(tesselURL)
-	adx := adx.New(AzClusterURL, AzClientID, AzTenantID, AzClientSecret)
-	c := cron.New()
-
 	log.Info("Setting up Kusto client...")
-	log.Info("Authenticating with Azure...")
-	adxClient, err := adx.GetKustoClient()
-	if err != nil {
-		log.Fatalf("Error setting ADX client: %v", err)
-	}
-
+	adx, err := adx.New(AzClusterURL, AzClientID, AzTenantID, AzClientSecret)
 	log.Info("Azure authentication successful")
+	c := cron.New()
 
 	// cron job to ingest data to ADX
 	err = c.AddFunc("@every 5s", func() {
@@ -75,11 +68,11 @@ func main() {
 		payload, err := json.Marshal(powerwall.Aggregates)
 		if err != nil {
 			// TODO: improve error handling
-			log.Error("Error encoding to Json: %v", err)
+			log.Errorf("Error encoding to Json: %v", err)
 		}
 
 		log.Info("Ingesting payload to Kusto...")
-		err = adx.IngestData(adxClient, payload)
+		err = adx.IngestData(payload)
 		if err != nil {
 			// TODO: send payload to local store in case ingestion to ADX fails
 			log.Error(err)

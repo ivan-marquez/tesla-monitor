@@ -25,3 +25,10 @@
 
 # Mac/OSX
 **/.DS_Store
+
+scripts/grafana/*
+!scripts/grafana/README.md
+
+scripts/influxdb/*
+!scripts/influxdb/README.md
+!scripts/influxdb/queries.flux

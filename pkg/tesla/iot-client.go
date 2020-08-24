@@ -1,5 +1,5 @@
-// Package iot implements functions to consume Tesla Powerwall API
-package iot
+// Package tesla implements functions to consume Tesla Powerwall API
+package tesla
 
 import (
 	"context"
@@ -8,17 +8,6 @@ import (
 	"net/http"
 	"time"
 )
-
-// Tessel type represents IoT device
-type Tessel struct {
-	url string // Tessel URL
-}
-
-// Powerwall type with solar system data
-type Powerwall struct {
-	Aggregates        map[string]interface{} // Solar system aggregates
-	BatteryPercentage map[string]interface{} // Powerwall battery percentage
-}
 
 // GetAggregates retrieves aggregates for solar, site and battery status
 func (t *Tessel) GetAggregates(p *Powerwall) (*Powerwall, error) {

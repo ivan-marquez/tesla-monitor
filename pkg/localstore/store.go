@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/prologic/bitcask"
+	"git.mills.io/prologic/bitcask"
 )
 
 // SaveToLocalStore function to store payload to a temporary store

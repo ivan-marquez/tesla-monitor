@@ -8,7 +8,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/influxdata/influxdb-client-go v1.4.0
 	github.com/joho/godotenv v1.3.0
-	github.com/prologic/bitcask v0.3.6
+	git.mills.io/prologic/bitcask v0.3.6
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.6.0
 )
